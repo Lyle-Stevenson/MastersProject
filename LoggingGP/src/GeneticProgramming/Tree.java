@@ -1,6 +1,8 @@
 package GeneticProgramming;
 
 import java.awt.List;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -19,7 +21,7 @@ public class Tree {
 												"f31","f32","f33","f34","f35","f36","f37","f38","f39","f40",
 												"f41","f42","f43","f44","f45","f46","f47","f48","f49","f50",
 												"f51","f52","f53","f54","f55","f56","f57","f58"}; // Possible terminal node values
-	private long value = 0;
+	private double fitness = 0;
 	private static Random random = new Random();
 	private static Parameters params = new Parameters();
 	
@@ -46,6 +48,10 @@ public class Tree {
 		this.setHead(grow(this.getHead(), params.maxDepth)); // Call to generate the
 														// rest of tree.
 	}
+	
+	public Tree(Node head){
+		this.setHead(head);
+	}
 
 	public Node generateHead() { // Generates the head node of the tree
 		String function = FUNCTIONS[random.nextInt(FUNCTIONS.length)]; // Selects a random fucntion for node.
@@ -65,8 +71,10 @@ public class Tree {
 				child.setParentNode(parent); //Parent is set.
 				if (i == 0) { //If first iteration then its left child
 					parent.setLeft(child);
+					parent.getChildNodes().add(child);
 				} else { //If second iteration then its right child
 					parent.setRight(child);
+					parent.getChildNodes().add(child);
 				}
 				child = grow(child, depth); //Grow tree from this child
 			} else { //If child is selected to be a terminal node
@@ -76,8 +84,10 @@ public class Tree {
 				child.setParentNode(parent);//Childs parent is set
 				if (i == 0) { //If first iteration then its left child
 					parent.setLeft(child);
+					parent.getChildNodes().add(child);
 				} else { //If second iteration then its right child
 					parent.setRight(child);
+					parent.getChildNodes().add(child);
 				}
 			}
 		}
@@ -108,7 +118,7 @@ public class Tree {
 		
 	}
 	
-	public double test(ArrayList<Problem> testing){
+	public void test(ArrayList<Problem> testing){
 
 		int correct = 0;
 		int incorrect = 0;
@@ -135,7 +145,7 @@ public class Tree {
 		}
 		double total = correct+incorrect;
 		double accuracy = (correct / total) * 100;
-		return accuracy;
+		setFitness(accuracy);
 	}
 	
 	public double getClass(double x, double mean, double SD){
@@ -167,6 +177,8 @@ public class Tree {
 	        return Math.sqrt(getVariance(mean,data));
 	    }
 	
+	
+	    
 	public void printTree() {
 		Queue<Node> q = new LinkedList<Node>();
 		q.add(this.getHead());
@@ -449,5 +461,26 @@ public class Tree {
 
 	public void setC1Mean(double c1Mean) {
 		this.c1Mean = c1Mean;
+	}
+
+	public double getFitness() {
+		return fitness;
+	}
+
+	public void setFitness(double fitness) {
+		this.fitness = fitness;
+	}
+	
+	public Tree copy(Node head) {
+		Tree copy = new Tree(head);
+		copy.setC0Mean(this.getC0Mean());
+		copy.setC0SD(this.getC0SD());
+		copy.setC1Mean(this.getC1Mean());
+		copy.setC1SD(this.getC1SD());
+		copy.setFitness(this.getFitness());
+		
+		return copy;
+		
+		
 	}
 }
