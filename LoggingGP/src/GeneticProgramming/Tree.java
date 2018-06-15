@@ -22,6 +22,11 @@ public class Tree {
 	private long value = 0;
 	private static Random random = new Random();
 	private static Parameters params = new Parameters();
+	
+	private double c1Mean;
+	private double c1SD;
+	private double c0Mean;
+	private double c0SD;
 
 	private Node head = null; // Reference to head of the tree
 
@@ -79,6 +84,89 @@ public class Tree {
 		return parent; //Returns head node once tree is complete.
 	}
 
+	public void train(ArrayList<Problem> training){
+		
+		ArrayList<Double> c1 = new ArrayList<Double>();
+		ArrayList<Double> c0 = new ArrayList<Double>();
+		
+		for(Problem p:training){
+			subInFeats(p.getFeatures());
+			double evaluation = evaluate(this.getHead());
+			if(p.getClassification() == 0){
+				c0.add(evaluation);
+			}else{
+				c1.add(evaluation);
+			}
+		
+		setC1Mean(getMean(c1));
+		setC0Mean(getMean(c0));
+		
+		setC1SD(getStdDev(getC1Mean(),c1));
+		setC0SD(getStdDev(getC0Mean(),c0));		
+		
+		}
+		
+	}
+	
+	public double test(ArrayList<Problem> testing){
+
+		int correct = 0;
+		int incorrect = 0;
+		
+		for(Problem p:testing){
+			int classification;
+			subInFeats(p.getFeatures());
+			double evaluation = evaluate(this.getHead());
+			double c0Prob = getClass(evaluation, getC0Mean(), getC0SD());
+			double c1Prob = getClass(evaluation, getC1Mean(), getC1SD());
+			
+			if(c0Prob > c1Prob){
+				classification = 0;
+			}else{
+				classification = 1;
+			}
+			
+			if(classification == p.getClassification()){
+				correct++;
+			}else{
+				incorrect++;
+			}
+			
+		}
+		double total = correct+incorrect;
+		double accuracy = (correct / total) * 100;
+		return accuracy;
+	}
+	
+	public double getClass(double x, double mean, double SD){
+		double value = 0;
+		
+		double left = 1/(SD*(Math.sqrt(2 * Math.PI)));
+		double right = Math.pow(-(x - mean),2) / 2*Math.pow(SD, 2);
+		
+		value = Math.round(left * Math.exp(right));
+		
+		return value;
+	}
+	
+	 double getMean(ArrayList<Double> data) {
+	        double sum = 0.0;
+	        for(double a : data)
+	            sum += a;
+	        return sum/data.size();
+	    }
+
+	    double getVariance(double mean, ArrayList<Double> data) {
+	        double temp = 0;
+	        for(double a :data)
+	            temp += (a-mean)*(a-mean);
+	        return temp/(data.size()-1);
+	    }
+
+	    double getStdDev(double mean , ArrayList<Double> data ) {
+	        return Math.sqrt(getVariance(mean,data));
+	    }
+	
 	public void printTree() {
 		Queue<Node> q = new LinkedList<Node>();
 		q.add(this.getHead());
@@ -97,7 +185,7 @@ public class Tree {
 		}
 	}
 	
-	public void subInFeats(ArrayList<Float> features) {
+	public void subInFeats(ArrayList<Double> features) {
 		Queue<Node> q = new LinkedList<Node>();
 		q.add(this.getHead());
 		while (!q.isEmpty()) {
@@ -287,63 +375,36 @@ public class Tree {
 		}
 	}
 	
-//	public float evaluate(Node node) {
-//		
-//		if(node instanceof TerminalNode){
-//			return (float) node.getTerminalValue();
-//		}
-//		
-//		switch (node.getFunctionValue()){
-//		case "+":
-//			return evaluate(node.left) + evaluate(node.right);
-//		case "-":
-//			float sum = evaluate(node.left) - evaluate(node.right);
-//			System.out.println(evaluate(node.left) + " - " + evaluate(node.right) + " = " + sum);
-//			return evaluate(node.left) - evaluate(node.right);
-//		case "/":
-//			float sum2 = evaluate(node.left) / evaluate(node.right);
-//			System.out.println(evaluate(node.left) + " / " + evaluate(node.right) + " = " + sum2);
-//			return evaluate(node.left) / evaluate(node.right);
-//		case "*":
-//			return evaluate(node.left) * evaluate(node.right);
-//			
-//		}
-//		return 0;
-//	}
 	
-	public float evaluate(Node node){
+	public double evaluate(Node node){
 		if(node !=null){
 			if(node instanceof TerminalNode){
 				return node.getTerminalValue();
 			}else{
-				float left = evaluate(node.left);
-				float right = evaluate(node.right);
+				double left = evaluate(node.left);
+				double right = evaluate(node.right);
 				return calculate(left,node.getFunctionValue(), right);
 			}
 		}
 	return -1;
 	}
 
-	private float calculate(float left, String functionValue, float right) {
+	private double calculate(double left, String functionValue, double right) {
 		
-	float sum = 0;
+	double sum = 0;
 	
 	switch (functionValue){
 	case "+":
 		sum = left + right;
-		System.out.println(left + " + " + right + " = " + sum);
 		return sum;
 	case "*":
 		sum = left * right;
-		System.out.println(left + " * " + right + " = " + sum);
 		return sum;
 	case "-":
 		sum = left - right;
-		System.out.println(left + " - " + right + " = " + sum);
 		return sum;
 	case "/":
 		sum = left / right;
-		System.out.println(left + " / " + right + " = " + sum);
 	return sum;
 	}
 	
@@ -356,5 +417,37 @@ public class Tree {
 
 	public void setHead(Node head) {
 		this.head = head;
+	}
+
+	public double getC0Mean() {
+		return c0Mean;
+	}
+
+	public void setC0Mean(double c0Mean) {
+		this.c0Mean = c0Mean;
+	}
+
+	public double getC1SD() {
+		return c1SD;
+	}
+
+	public void setC1SD(double c1sd) {
+		c1SD = c1sd;
+	}
+
+	public double getC0SD() {
+		return c0SD;
+	}
+
+	public void setC0SD(double c0sd) {
+		c0SD = c0sd;
+	}
+
+	public double getC1Mean() {
+		return c1Mean;
+	}
+
+	public void setC1Mean(double c1Mean) {
+		this.c1Mean = c1Mean;
 	}
 }

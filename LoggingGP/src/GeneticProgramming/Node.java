@@ -4,7 +4,7 @@ public class Node {
 	Node left, right; // References to this nodes children
 	private Node parentNode = null; // Reference to nodes parent.
 	private int level; // What level of depth this node is at within the tree.
-	private float terminalValue;
+	private double terminalValue;
 	private String functionValue;
 	private Object value;
 	public Node() // Constructor
@@ -46,11 +46,11 @@ public class Node {
 		this.level = level;
 	}
 
-	public float getTerminalValue() {
+	public double getTerminalValue() {
 		return terminalValue;
 	}
 
-	public void setTerminalValue(float terminalValue) {
+	public void setTerminalValue(double terminalValue) {
 		this.terminalValue = terminalValue;
 	}
 

@@ -2,7 +2,7 @@ package GeneticProgramming;
 
 public class TerminalNode extends Node {
 	
-	public TerminalNode(float value) {
+	public TerminalNode(double value) {
 		this.setTerminalValue(value);
 		this.setValue(value);
 	}
@@ -12,7 +12,7 @@ public class TerminalNode extends Node {
 		this.setValue(value);
 	}
 	
-	public TerminalNode(float value, Node left, Node right) {
+	public TerminalNode(double value, Node left, Node right) {
 		this.setTerminalValue(value);
 		this.setValue(value);
 		this.left = left;
