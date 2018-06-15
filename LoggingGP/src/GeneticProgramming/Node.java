@@ -109,14 +109,16 @@ public class Node {
 			copiedNode.setFunctionValue(this.getFunctionValue());
 		}else{
 			copiedNode = new FunctionNode(this.getFunctionValue());
+			if(this.getLeft() != null){
+				copiedNode.setLeft(this.getLeft().copy());
+				copiedNode.getLeft().setParentNode(copiedNode);
+				}
+			if(this.getRight() != null){
+					copiedNode.setRight(this.getRight().copy());
+					copiedNode.getRight().setParentNode(copiedNode);
+					}
 		}
-		copiedNode.setParentNode(this.getParentNode());
-		if(this.getLeft() != null){
-		copiedNode.setLeft(this.getLeft().copy());	
-		}
-		if(this.getRight() != null){
-			copiedNode.setRight(this.getRight().copy());	
-			}
+		
 		if(this.parentNode != null){
 			copiedNode.setLevel(this.parentNode.getLevel() + 1);
 		}

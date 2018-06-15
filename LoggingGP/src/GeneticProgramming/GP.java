@@ -26,12 +26,12 @@ public class GP {
 		}
 		
 		Tree t = new Tree();
-		Tree r = new Tree();
+	//	Tree r = new Tree();
 		
 		t.train(trainingData);
 		t.test(testData);
-		r.train(trainingData);
-		r.test(testData);
+	//	r.train(trainingData);
+	//	r.test(testData);
 		
 		System.out.println("Tree1:");
 		t.printTree();
@@ -39,7 +39,7 @@ public class GP {
 //		r.printTree();
 		
 		Tree parent1 = t.copy(t.getHead().copy());
-		Tree parent2 = r.copy(r.getHead());
+//		Tree parent2 = r.copy(r.getHead());
 		
 //		Node point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 //		
@@ -48,8 +48,13 @@ public class GP {
 //		Node parent = parent1.getHead().getAllNodes().get(point).getParentNode();
 //		
 //		parent.setLeft(new Node());
+		Node temp = parent1.getHead();
 		
-		parent1.getHead().getAllNodes().get(2).getParentNode().setRight(new Node());
+		ArrayList<Node> temp1 = temp.getAllNodes();
+				
+		Node temp3 = temp1.get(1).getParentNode();
+		
+		temp.setRight(new Node());
 		
 		System.out.println("Child:");
 		parent1.printTree();
