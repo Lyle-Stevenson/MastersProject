@@ -1,8 +1,9 @@
 package GeneticProgramming;
 
-import java.lang.reflect.Constructor;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+
 
 public class Node {
 	Node left, right; // References to this nodes children
@@ -79,7 +80,9 @@ public class Node {
 		ArrayList<Node> subNodes = new ArrayList<Node>();
 		for(Node childNode : getChildNodes()){
 			subNodes.add(childNode);
+			if(childNode instanceof FunctionNode){
 			subNodes.addAll(childNode.getAllSubNodes());
+			}
 		}
 		return subNodes;
 	}
@@ -89,7 +92,9 @@ public class Node {
 		allNodes.add(this);
 		for(Node childNode : getChildNodes()){
 			allNodes.add(childNode);
+			if(childNode instanceof FunctionNode){
 			allNodes.addAll(childNode.getAllSubNodes());
+			}
 		}
 		return allNodes;
 	}
@@ -102,7 +107,7 @@ public class Node {
 		this.childNodes = childNodes;
 	}
 	
-	public Node copy() {
+	public Node copy(Node parent) {
 		Node copiedNode;
 		if(this instanceof TerminalNode){
 			copiedNode = new TerminalNode(this.getTerminalValue());
@@ -110,21 +115,50 @@ public class Node {
 		}else{
 			copiedNode = new FunctionNode(this.getFunctionValue());
 		}
-		copiedNode.setParentNode(this.getParentNode());
+		
+		copiedNode.setParentNode(parent);
+		
 		if(this.getLeft() != null){
-		copiedNode.setLeft(this.getLeft().copy());	
+		copiedNode.setLeft(this.getLeft().copy(copiedNode));	
 		}
 		if(this.getRight() != null){
-			copiedNode.setRight(this.getRight().copy());	
+			copiedNode.setRight(this.getRight().copy(copiedNode));	
 			}
+		
 		if(this.parentNode != null){
 			copiedNode.setLevel(this.parentNode.getLevel() + 1);
 		}
-		for(Node node : this.childNodes){
-			copiedNode.getChildNodes().add(node.copy());
-		}
+		copiedNode.childNodes.add(copiedNode.getLeft());
+		copiedNode.childNodes.add(copiedNode.getRight());
 		return copiedNode; 
 	}
 	
+	public void resetLevels(Node node){
+		if(node.getParentNode() == null){
+			node.setLevel(0);
+		}else{
+		int parentlevel = node.getParentNode().getLevel();
+		node.setLevel(parentlevel +1);
+		}
+		if(node.getLeft() != null){
+			resetLevels(node.getLeft());
+		}
+		if(node.getRight() != null){
+			resetLevels(node.getRight());
+		}
+	}
+	
+	public int getMaxDepth(){		
+		int maxDepth = 0;
+		for(Node node : getAllSubNodes()){
+			if(node != null){
+				if(node.level > maxDepth){
+					maxDepth = node.level;
+				}
+			}
+		}
+		return maxDepth;
+	}
+
 
 }

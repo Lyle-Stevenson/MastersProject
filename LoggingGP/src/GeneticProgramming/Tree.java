@@ -11,7 +11,7 @@ import GeneticProgramming.Parameters;
 
 public class Tree {
 
-	private static final String[] FUNCTIONS = { "+","*","-", "/"}; // List of
+	private static final String[] FUNCTIONS = {"+","*","-", "/"}; // List of
 																		// possible
 																		// function
 																		// nodes
@@ -22,6 +22,7 @@ public class Tree {
 												"f41","f42","f43","f44","f45","f46","f47","f48","f49","f50",
 												"f51","f52","f53","f54","f55","f56","f57","f58"}; // Possible terminal node values
 	private double fitness = 0;
+	private double accuracy = 0;
 	private static Random random = new Random();
 	private static Parameters params = new Parameters();
 	
@@ -107,14 +108,16 @@ public class Tree {
 			}else{
 				c1.add(evaluation);
 			}
-		
+		}
 		setC1Mean(getMean(c1));
 		setC0Mean(getMean(c0));
 		
 		setC1SD(getStdDev(getC1Mean(),c1));
 		setC0SD(getStdDev(getC0Mean(),c0));		
 		
-		}
+		setFitness(calcFitness());
+		
+		
 		
 	}
 	
@@ -145,20 +148,39 @@ public class Tree {
 		}
 		double total = correct+incorrect;
 		double accuracy = (correct / total) * 100;
-		setFitness(accuracy);
+		setAccuracy(accuracy);
 	}
 	
 	public double getClass(double x, double mean, double SD){
 		double value = 0;
-		
 		double left = 1/(SD*(Math.sqrt(2 * Math.PI)));
-		double right = Math.pow(-(x - mean),2) / 2*Math.pow(SD, 2);
-		
-		value = Math.round(left * Math.exp(right));
+		double rightTop = Math.pow(-(x - mean),2);
+		double rightBottom = 2*Math.pow(SD, 2);
+		double right = rightTop / rightBottom;
+
+		value = left * Math.exp(right);
 		
 		return value;
 	}
 	
+	public static double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    long factor = (long) Math.pow(10, places);
+	    value = value * factor;
+	    long tmp = Math.round(value);
+	    return (double) tmp / factor;
+	}
+	
+	public double calcFitness(){
+		double fitness = 0;
+		
+		double top = Math.abs(this.getC0Mean() - this.getC1Mean()) + 1;
+		double bottom = Math.sqrt(this.getC0SD() + this.getC1SD()) + 1;
+		fitness = top / bottom;
+		
+		return fitness;
+	}
 	 double getMean(ArrayList<Double> data) {
 	        double sum = 0.0;
 	        for(double a : data)
@@ -473,14 +495,18 @@ public class Tree {
 	
 	public Tree copy(Node head) {
 		Tree copy = new Tree(head);
-		copy.setC0Mean(this.getC0Mean());
-		copy.setC0SD(this.getC0SD());
-		copy.setC1Mean(this.getC1Mean());
-		copy.setC1SD(this.getC1SD());
-		copy.setFitness(this.getFitness());
 		
 		return copy;
 		
 		
 	}
+
+	public double getAccuracy() {
+		return accuracy;
+	}
+
+	public void setAccuracy(double accuracy) {
+		this.accuracy = accuracy;
+	}
+	
 }
