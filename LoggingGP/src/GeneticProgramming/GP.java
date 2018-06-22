@@ -17,7 +17,6 @@ public class GP {
 	Tree best;
 	
 	public GP (){
-		System.out.println("1");
 		try {
 			getData();
 		} catch (IOException e) {
@@ -46,7 +45,6 @@ public class GP {
 		
 			
 		populate();
-		System.out.println("2");
 		for(Tree t:population){
 			t.train(trainingData);
 			if(t.getFitness() > bestFitness){
@@ -54,33 +52,21 @@ public class GP {
 				best = t;
 			}
 		}
-		System.out.println("3");
 		for(int gen = 0; gen < Parameters.numberOfGenerations; gen++){
-			System.out.println("gen");
 		ArrayList<Tree> newPopulation = new ArrayList<Tree>();
 		for(int i = 0; i < Parameters.popSize; i++){
-			System.out.println("pop " + i);
 			 //if ( random.nextDouble() < Parameters.crossoverProbability) {
-			System.out.println("");
-			System.out.println("Parent1: ");
 			Tree parent1 = new Tree(selection(2).getHead().copy(null));
-			parent1.printTree();
-			System.out.println(" ");
-			System.out.println("Parent2: ");
 			Tree parent2 = new Tree(selection(2).getHead().copy(null));
 			
 			while(parent1 == parent2){
 				parent2 = new Tree(selection(2).getHead().copy(null));
 			}
 			
-			parent2.printTree();
 			Tree child = crossover(parent1,parent2);
 //			while(child.getHead().getMaxDepth() > Parameters.maximumRecombinationDepth){
 //				child = crossover(parent1,parent2);
 //			}
-			System.out.println(" ");
-			System.out.println("Child: ");
-			child.printTree();
 			      //}
 //			      else {
 //			    	parent1 = selection(2).copy(selection(2).getHead());
@@ -90,23 +76,17 @@ public class GP {
 		}
 		
 		population = newPopulation;
-		System.out.println("3");
 		int count = 0;
 		for(Tree t:population){
 			count++;
-			System.out.println("here "+count);
-			t.printTree();
 			t.train(trainingData);
 			if(t.getFitness() > bestFitness){
 				bestFitness = t.getFitness();
 				best = t;
 			}
 		}
-		System.out.println("4");
-		System.out.println(gen);
-	}
 		System.out.println("best: " + best.getFitness());
-		best.printTree();
+	}
 		best.test(testData);
 		System.out.println("The best fitness found was: " + best.getAccuracy() + "%" );
 	}
@@ -201,8 +181,8 @@ public class GP {
 	}
 		
 	private void getData() throws IOException {
-		testData = readData("test.csv");
-		trainingData = readData("training.csv");
+		testData = readData(Parameters.testingData);
+		trainingData = readData(Parameters.trainingData);
 	}
 
 	public void populate(){
@@ -210,9 +190,6 @@ public class GP {
 			for(int i = 0; i < Parameters.popSize; i++){
 			Tree individual = new Tree();
 			population.add(individual);
-			System.out.println(" ");
-			System.out.println("new: ");
-			individual.printTree();
 			}
 	}
 	
@@ -223,7 +200,7 @@ public class GP {
 	    	ArrayList<Double> feats = new ArrayList<Double>();
 	        String line = scan.nextLine();
 	        String[] lineArray = line.split(",");
-	        for(int i = 0; i < 58; i ++){
+	        for(int i = 0; i < 8; i ++){
 	        	feats.add(Double.parseDouble(lineArray[i]));
 	        }
 	        Problem prob = new Problem(feats, Integer.parseInt(lineArray[58]));
