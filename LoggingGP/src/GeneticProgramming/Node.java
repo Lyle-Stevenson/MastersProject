@@ -135,7 +135,7 @@ public class Node {
 	
 	public void resetLevels(Node node){
 		if(node.getParentNode() == null){
-			node.setLevel(0);
+			node.setLevel(1);
 		}else{
 		int parentlevel = node.getParentNode().getLevel();
 		node.setLevel(parentlevel +1);

@@ -15,8 +15,7 @@ public class Tree {
 																		// possible
 																		// function
 																		// nodes
-	private static final String[] TERMINALS = { "f1","f2","f3","f4","f5","f6","f7","f8"};
-		/*,"f9","f10",
+	private static final String[] TERMINALS = { "f1","f2","f3","f4","f5","f6","f7","f8","f9","f10",
 												"f11","f12","f13","f14","f15","f16","f17","f18","f19","f20",
 												"f21","f22","f23","f24","f25","f26","f27","f28","f29","f30",
 												"f31","f32","f33","f34","f35","f36","f37","f38","f39","f40",
@@ -24,6 +23,7 @@ public class Tree {
 												"f51","f52","f53","f54","f55","f56","f57","f58"}; // Possible terminal node values*/
 	private double fitness = 0;
 	private double accuracy = 0;
+	private double accuracy2 = 0;
 	private static Random random = new Random();
 	private static Parameters params = new Parameters();
 	
@@ -110,10 +110,10 @@ public class Tree {
 		ArrayList<Double> c0 = new ArrayList<Double>();
 		
 		for(Problem p:training){
-			subInFeats(p.getFeatures());
+			this.subInFeats(p.getFeatures());
 			double evaluation;	
 			evaluation= evaluate(this.getHead());
-			if(evaluation == Double.POSITIVE_INFINITY || evaluation == Double.NEGATIVE_INFINITY) {
+  			if(evaluation == Double.POSITIVE_INFINITY || evaluation == Double.NEGATIVE_INFINITY) {
 				evaluation = 0;
 			}
 			if(p.getClassification() == 0){
@@ -122,15 +122,48 @@ public class Tree {
 				c1.add(evaluation);
 			}
 		}
-		setC1Mean(getMean(c1));
-		setC0Mean(getMean(c0));
+		this.setC1Mean(this.getMean(c1));
+		this.setC0Mean(this.getMean(c0));
 		
-		setC1SD(getStdDev(getC1Mean(),c1));
-		setC0SD(getStdDev(getC0Mean(),c0));		
+		this.setC1SD(this.getStdDev(this.getC1Mean(),c1));
+		this.setC0SD(this.getStdDev(this.getC0Mean(),c0));		
 		
-		setFitness(calcFitness());
+		this.setFitness(this.calcFitness());
 		
 		
+	}
+	
+	public void test2(ArrayList<Problem> training){
+
+		int correct = 0;
+		int incorrect = 0;
+		
+		for(Problem p:training){
+			int classification;
+			this.subInFeats(p.getFeatures());
+			double evaluation = evaluate(this.getHead());
+			double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
+			double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
+			//System.out.println("Eval : " + evaluation);
+			//System.out.println("C0: " + "Prob: " + c0Prob + " Mean: "  + this.c0Mean);
+			//System.out.println("C1: " + "Prob: " + c1Prob + " Mean: "  + this.c1Mean);
+			
+			if(c0Prob > c1Prob){
+				classification = 0;
+			}else{
+				classification = 1;
+			}
+			
+			if(classification == p.getClassification()){
+				correct++;
+			}else{
+				incorrect++;
+			}
+			System.out.println("predicted " + classification + "  actual " + p.getClassification());
+		}
+		double total = correct+incorrect;
+		double accuracy = (correct / total) * 100;
+		setAccuracy2(accuracy);
 	}
 	
 	public void test(ArrayList<Problem> testing){
@@ -140,10 +173,10 @@ public class Tree {
 		
 		for(Problem p:testing){
 			int classification;
-			subInFeats(p.getFeatures());
+			this.subInFeats(p.getFeatures());
 			double evaluation = evaluate(this.getHead());
-			double c0Prob = getClass(evaluation, this.c0Mean, getC0SD());
-			double c1Prob = getClass(evaluation, this.c1Mean, getC1SD());
+			double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
+			double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
 			//System.out.println("Eval : " + evaluation);
 			//System.out.println("C0: " + "Prob: " + c0Prob + " Mean: "  + this.c0Mean);
 			//System.out.println("C1: " + "Prob: " + c1Prob + " Mean: "  + this.c1Mean);
@@ -224,7 +257,7 @@ public class Tree {
 			if(n instanceof FunctionNode){
 			System.out.println(n.getFunctionValue() + " : Level - " + n.getLevel());}
 			else{
-				System.out.println(n.getFunctionValue() + " : Level - " + n.getLevel());}	
+				System.out.println(n.getTerminalValue() + " (" + n.getFunctionValue() + " )" +  " : Level - " + n.getLevel());}	
 			if (n.left != null) {
 				q.add(n.left);// enqueue the left child
 			}
@@ -525,6 +558,14 @@ public class Tree {
 
 	public void setAccuracy(double accuracy) {
 		this.accuracy = accuracy;
+	}
+
+	public double getAccuracy2() {
+		return accuracy2;
+	}
+
+	public void setAccuracy2(double accuracy2) {
+		this.accuracy2 = accuracy2;
 	}
 	
 }

@@ -13,8 +13,7 @@ public class GP {
 	private static Random random = new Random();
 	ArrayList<Problem> testData;
 	ArrayList<Problem> trainingData;
-	double bestFitness = 0;
-	Tree best;
+	Tree best = new Tree();
 
 	public GP() {
 		try {
@@ -44,16 +43,16 @@ public class GP {
 		// child.printTree();
 
 		populate();
-		for (Tree t : population) {
-			t.train(trainingData);
-			if (t.getFitness() > bestFitness) {
-				bestFitness = t.getFitness();
-				best = t;
+		for (Tree t : this.population) {
+			t.train(this.trainingData);
+			if (t.getFitness() > this.best.getFitness()) {
+				this.best = new Tree(t.getHead().copy(null));
+				this.best.setFitness(t.getFitness());
 			}
 		}
 		for (int gen = 0; gen < Parameters.numberOfGenerations; gen++) {
 			ArrayList<Tree> newPopulation = new ArrayList<Tree>();
-			newPopulation.add(best);
+			newPopulation.add(this.best);
 			for (int i = 0; i < Parameters.popSize-1; i++) {
 				Tree child;
 				if (random.nextDouble() < Parameters.crossoverProbability) {
@@ -65,25 +64,31 @@ public class GP {
 					}
 					child = crossover(parent1, parent2);
 				}	else {
-				Tree parent1 = selection(2).copy(selection(2).getHead());
+					Tree parent1 = new Tree(selection(2).getHead().copy(null));
 				child = mutation(parent1);
 			}
 				newPopulation.add(child);
 			}
 
-			population = newPopulation;
+			this.population = newPopulation;
 			int count = 0;
-			for (Tree t : population) {
+			for (Tree t : this.population) {
 				count++;
-				t.train(trainingData);
-				if (t.getFitness() > bestFitness) {
-					bestFitness = t.getFitness();
-					best = t;
+				t.train(this.trainingData);
+				//System.out.println(t.getFitness() + " " + this.best.getFitness());
+				if (t.getFitness() > this.best.getFitness()) {
+					this.best = new Tree(t.getHead().copy(null));
+					this.best.setFitness(t.getFitness());
 				}
 			}
-			System.out.println("best: " + best.getFitness());
-		}best.test(testData);System.out.println("The best fitness found was: "+best.getAccuracy()+"%");
-
+			System.out.println("best: " + this.best.getFitness());
+		}
+		this.best.test(testData);
+		this.best.test2(trainingData);
+		System.out.println("Test: "+this.best.getAccuracy()+"%");
+		System.out.println("Training: "+this.best.getAccuracy2()+"%");
+		System.out.println("Best Tree: ");
+		//this.best.printTree();
 	}
 
 	private Tree mutation(Tree parent1) {
@@ -215,7 +220,7 @@ public class GP {
 			ArrayList<Double> feats = new ArrayList<Double>();
 			String line = scan.nextLine();
 			String[] lineArray = line.split(",");
-			for (int i = 0; i < 8; i++) {
+			for (int i = 0; i < 58; i++) {
 				feats.add(Double.parseDouble(lineArray[i]));
 			}
 			Problem prob = new Problem(feats, Integer.parseInt(lineArray[58]));
