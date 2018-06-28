@@ -7,7 +7,7 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class GP {
-	
+
 	ArrayList<Tree> population = new ArrayList<Tree>();
 	Parameters params = new Parameters();
 	private static Random random = new Random();
@@ -15,101 +15,111 @@ public class GP {
 	ArrayList<Problem> trainingData;
 	double bestFitness = 0;
 	Tree best;
-	
-	public GP (){
+
+	public GP() {
 		try {
 			getData();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		//Crossover test
-//		Tree a1 = new Tree();
-//		a1.train(trainingData);
-//		Tree a2 = new Tree(a1.getHead().copy(null));
-//		Tree b1 = new Tree();
-//		b1.train(trainingData);
-//		Tree b2 = new Tree(b1.getHead().copy(null));
-//		
-//		System.out.println(" ");
-//		System.out.println("Parent1: ");
-//		a2.printTree();
-//		System.out.println(" ");
-//		System.out.println("Parent2: ");
-//		b2.printTree();
-//		System.out.println(" ");
-//		System.out.println("Child: ");
-//		Tree child = crossover(a2,b2);
-//		child.printTree();
-		
-			
+
+		// Crossover test
+		// Tree a1 = new Tree();
+		// a1.train(trainingData);
+		// Tree a2 = new Tree(a1.getHead().copy(null));
+		// Tree b1 = new Tree();
+		// b1.train(trainingData);
+		// Tree b2 = new Tree(b1.getHead().copy(null));
+		//
+		// System.out.println(" ");
+		// System.out.println("Parent1: ");
+		// a2.printTree();
+		// System.out.println(" ");
+		// System.out.println("Parent2: ");
+		// b2.printTree();
+		// System.out.println(" ");
+		// System.out.println("Child: ");
+		// Tree child = crossover(a2,b2);
+		// child.printTree();
+
 		populate();
-		for(Tree t:population){
+		for (Tree t : population) {
 			t.train(trainingData);
-			if(t.getFitness() > bestFitness){
+			if (t.getFitness() > bestFitness) {
 				bestFitness = t.getFitness();
 				best = t;
 			}
 		}
-		for(int gen = 0; gen < Parameters.numberOfGenerations; gen++){
-		ArrayList<Tree> newPopulation = new ArrayList<Tree>();
-		for(int i = 0; i < Parameters.popSize; i++){
-			 //if ( random.nextDouble() < Parameters.crossoverProbability) {
-			Tree parent1 = new Tree(selection(2).getHead().copy(null));
-			Tree parent2 = new Tree(selection(2).getHead().copy(null));
-			
-			while(parent1 == parent2){
-				parent2 = new Tree(selection(2).getHead().copy(null));
+		for (int gen = 0; gen < Parameters.numberOfGenerations; gen++) {
+			ArrayList<Tree> newPopulation = new ArrayList<Tree>();
+			newPopulation.add(best);
+			for (int i = 0; i < Parameters.popSize-1; i++) {
+				Tree child;
+				if (random.nextDouble() < Parameters.crossoverProbability) {
+					Tree parent1 = new Tree(selection(2).getHead().copy(null));
+					Tree parent2 = new Tree(selection(2).getHead().copy(null));
+
+					while (parent1 == parent2) {
+						parent2 = new Tree(selection(2).getHead().copy(null));
+					}
+					child = crossover(parent1, parent2);
+				}	else {
+				Tree parent1 = selection(2).copy(selection(2).getHead());
+				child = mutation(parent1);
 			}
-			
-			Tree child = crossover(parent1,parent2);
-//			while(child.getHead().getMaxDepth() > Parameters.maximumRecombinationDepth){
-//				child = crossover(parent1,parent2);
-//			}
-			      //}
-//			      else {
-//			    	parent1 = selection(2).copy(selection(2).getHead());
-//			        child = mutation(parent1);
-//			      }	
-			        newPopulation.add(child);
-		}
-		
-		population = newPopulation;
-		int count = 0;
-		for(Tree t:population){
-			count++;
-			t.train(trainingData);
-			if(t.getFitness() > bestFitness){
-				bestFitness = t.getFitness();
-				best = t;
+				newPopulation.add(child);
 			}
-		}
-		System.out.println("best: " + best.getFitness());
+
+			population = newPopulation;
+			int count = 0;
+			for (Tree t : population) {
+				count++;
+				t.train(trainingData);
+				if (t.getFitness() > bestFitness) {
+					bestFitness = t.getFitness();
+					best = t;
+				}
+			}
+			System.out.println("best: " + best.getFitness());
+		}best.test(testData);System.out.println("The best fitness found was: "+best.getAccuracy()+"%");
+
 	}
-		best.test(testData);
-		System.out.println("The best fitness found was: " + best.getAccuracy() + "%" );
-	}
-	
+
 	private Tree mutation(Tree parent1) {
 		Tree child;
-		
-		Node point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
-		System.out.println("Point: " + point1.getValue());
-		child = parent1;
-		int point1Idx = child.getHead().getAllNodes().indexOf(point1);
-		Node point = child.getHead().getAllNodes().get(point1Idx);
-		Node parent = point.getParentNode();
-		Tree mutationTree = new Tree();
-		
-		mutationTree.printTree();
-		
-		if(parent.getLeft() == point){
-			parent.setLeft(mutationTree.getHead());
-		}else{
-			parent.setRight(mutationTree.getHead());
+
+		Node point1;
+
+		if (parent1.getHead() instanceof TerminalNode) {
+			point1 = parent1.getHead();
+		} else {
+			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
 		
+		while(point1.getLevel() >= Parameters.maximumRecombinationDepth){
+			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
+		}
+
+		child = parent1;
+
+		Tree mutationTree = new Tree(Parameters.maximumRecombinationDepth - (point1.getLevel()));
+
+		if (point1.getParentNode() == null) {
+			child = mutationTree;
+		} else if (point1.getParentNode().getLeft() == point1) {
+			point1.getParentNode().setLeft(mutationTree.getHead());
+			point1.getParentNode().getChildNodes().remove(point1);
+			point1.getParentNode().getChildNodes().add(mutationTree.getHead());
+			mutationTree.getHead().setParentNode(point1.getParentNode());
+			mutationTree.getHead().resetLevels(mutationTree.getHead());
+		} else {
+			point1.getParentNode().setRight(mutationTree.getHead());
+			point1.getParentNode().getChildNodes().remove(point1);
+			point1.getParentNode().getChildNodes().add(mutationTree.getHead());
+			mutationTree.getHead().setParentNode(point1.getParentNode());
+			mutationTree.getHead().resetLevels(mutationTree.getHead());
+		}
 		return child;
 	}
 
@@ -117,95 +127,100 @@ public class GP {
 		Tree child;
 		Node point1;
 		Node point2;
-		if(parent1.getHead() instanceof TerminalNode){
+
+		if (parent1.getHead() instanceof TerminalNode) {
 			point1 = parent1.getHead();
-		}else{
-		point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
+		} else {
+			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
-		if(parent2.getHead() instanceof TerminalNode){
-			point2 = parent2.getHead();
-		}else{
-		point2 = parent2.getHead().getAllNodes().get(random.nextInt(parent2.getHead().getAllNodes().size()));
+
+		while(point1.getLevel() >= Parameters.maximumRecombinationDepth){
+			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
 		
+		if (parent2.getHead() instanceof TerminalNode) {
+			point2 = parent2.getHead();
+		} else {
+			point2 = parent2.getHead().getAllNodes().get(random.nextInt(parent2.getHead().getAllNodes().size()));
+		}
+
+		while (point1.getLevel() + point2.getMaxDepth() > Parameters.maximumRecombinationDepth) {
+			point2 = parent2.getHead().getAllNodes().get(random.nextInt(parent2.getHead().getAllNodes().size()));
+		}
+
 		if (point1.getParentNode() == null) {
 			point2.setParentNode(null);
 			point2.resetLevels(point2);
 			child = new Tree(point2);
-			
-		}else{
-			
+
+		} else {
+
 			child = parent1;
-			
-			
-			if(point1.getParentNode().getLeft() == point1){
+
+			if (point1.getParentNode().getLeft() == point1) {
 				point1.getParentNode().setLeft(point2);
 				point1.getParentNode().getChildNodes().remove(point1);
 				point1.getParentNode().getChildNodes().add(point2);
 				point2.setParentNode(point1.getParentNode());
 				point2.resetLevels(point2);
-			}else{
+			} else {
 				point1.getParentNode().setRight(point2);
 				point1.getParentNode().getChildNodes().remove(point1);
 				point1.getParentNode().getChildNodes().add(point2);
 				point2.setParentNode(point1.getParentNode());
 				point2.resetLevels(point2);
 			}
-		}	
+		}
 		return child;
 	}
 
-	public Tree selection(int tnSize)
-	{	
-			ArrayList<Tree> tournament = new ArrayList<Tree>();
-			Tree chosenParent = null;
-			Random generator = new Random();
-			double bestFitness = 0;
-			
-			for(int i = 0; i < tnSize; i++)
-			{	
-				tournament.add(this.population.get(generator.nextInt(this.population.size()-1)));
+	public Tree selection(int tnSize) {
+		ArrayList<Tree> tournament = new ArrayList<Tree>();
+		Tree chosenParent = null;
+		Random generator = new Random();
+		double bestFitness = 0;
+
+		for (int i = 0; i < tnSize; i++) {
+			tournament.add(this.population.get(generator.nextInt(this.population.size() - 1)));
+		}
+
+		chosenParent = tournament.get(0);
+
+		for (Tree t : tournament) {
+			if (t.getFitness() > bestFitness) {
+				bestFitness = t.getFitness();
+				chosenParent = t;
 			}
-			
-			chosenParent = tournament.get(0);
-			
-			for(Tree t : tournament)
-			{
-				if(t.getFitness() > bestFitness)
-				{
-					bestFitness = t.getFitness();
-					chosenParent = t;
-				}
-			}
-			return chosenParent;
+		}
+		return chosenParent;
 	}
-		
+
 	private void getData() throws IOException {
 		testData = readData(Parameters.testingData);
 		trainingData = readData(Parameters.trainingData);
 	}
 
-	public void populate(){
-			
-			for(int i = 0; i < Parameters.popSize; i++){
+	public void populate() {
+
+		for (int i = 0; i < Parameters.popSize; i++) {
 			Tree individual = new Tree();
 			population.add(individual);
-			}
+		}
 	}
-	
+
 	public ArrayList<Problem> readData(String filePath) throws IOException {
-	    ArrayList<Problem> result = new ArrayList<Problem>();
-	    Scanner scan = new Scanner(new File(filePath),"UTF-8");
-	    while (scan.hasNextLine()) {
-	    	ArrayList<Double> feats = new ArrayList<Double>();
-	        String line = scan.nextLine();
-	        String[] lineArray = line.split(",");
-	        for(int i = 0; i < 8; i ++){
-	        	feats.add(Double.parseDouble(lineArray[i]));
-	        }
-	        Problem prob = new Problem(feats, Integer.parseInt(lineArray[58]));
-	        result.add(prob);
-	        }
-	        return result;
-	    }
+		ArrayList<Problem> result = new ArrayList<Problem>();
+		Scanner scan = new Scanner(new File(filePath), "UTF-8");
+		while (scan.hasNextLine()) {
+			ArrayList<Double> feats = new ArrayList<Double>();
+			String line = scan.nextLine();
+			String[] lineArray = line.split(",");
+			for (int i = 0; i < 8; i++) {
+				feats.add(Double.parseDouble(lineArray[i]));
+			}
+			Problem prob = new Problem(feats, Integer.parseInt(lineArray[58]));
+			result.add(prob);
+		}
+		return result;
+	}
 }

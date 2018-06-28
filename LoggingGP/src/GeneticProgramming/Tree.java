@@ -11,7 +11,7 @@ import GeneticProgramming.Parameters;
 
 public class Tree {
 
-	private static final String[] FUNCTIONS = {"+","-","/"}; // List of
+	private static final String[] FUNCTIONS = {"+","-","/","*"}; // List of
 																		// possible
 																		// function
 																		// nodes
@@ -46,8 +46,16 @@ public class Tree {
 	public Tree() { // Constructor
 		this.setHead(generateHead()); // Trees head is created on initialisation
 		this.getHead().setParentNode(null); // Head node has no parent
-		this.getHead().setLevel(0); // Sets level to 0
+		this.getHead().setLevel(1); // Sets level to 0
 		this.setHead(grow(this.getHead(), params.maxDepth)); // Call to generate the
+														// rest of tree.
+	}
+	
+	public Tree(int depth) { // Constructor
+		this.setHead(generateHead()); // Trees head is created on initialisation
+		this.getHead().setParentNode(null); // Head node has no parent
+		this.getHead().setLevel(1); // Sets level to 0
+		this.setHead(grow(this.getHead(), depth)); // Call to generate the
 														// rest of tree.
 	}
 	
@@ -445,6 +453,9 @@ public class Tree {
 		sum = left - right;
 		return sum;
 	case "/":
+		if(right == 0){
+			right = 1;
+		}
 		sum = left / right;
 	return sum;
 	}
