@@ -1,7 +1,9 @@
 package GeneticProgramming;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
@@ -9,11 +11,13 @@ import java.util.Scanner;
 public class GP {
 
 	ArrayList<Tree> population = new ArrayList<Tree>();
+	ArrayList<Double> Results = new ArrayList<Double>();
 	Parameters params = new Parameters();
 	private static Random random = new Random();
 	ArrayList<Problem> testData;
 	ArrayList<Problem> trainingData;
 	Tree best = new Tree();
+	Tree start = new Tree();
 
 	public GP() {
 		try {
@@ -48,6 +52,8 @@ public class GP {
 			if (t.getFitness() > this.best.getFitness()) {
 				this.best = new Tree(t.getHead().copy(null));
 				this.best.setFitness(t.getFitness());
+				this.start = new Tree(t.getHead().copy(null));
+				this.start.setFitness(t.getFitness());
 			}
 		}
 		for (int gen = 0; gen < Parameters.numberOfGenerations; gen++) {
@@ -56,24 +62,22 @@ public class GP {
 			for (int i = 0; i < Parameters.popSize-1; i++) {
 				Tree child;
 				if (random.nextDouble() < Parameters.crossoverProbability) {
-					Tree parent1 = new Tree(selection(2).getHead().copy(null));
-					Tree parent2 = new Tree(selection(2).getHead().copy(null));
+					Tree parent1 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
+					Tree parent2 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
 
 					while (parent1 == parent2) {
-						parent2 = new Tree(selection(2).getHead().copy(null));
+						parent2 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
 					}
 					child = crossover(parent1, parent2);
 				}	else {
-					Tree parent1 = new Tree(selection(2).getHead().copy(null));
+					Tree parent1 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
 				child = mutation(parent1);
 			}
 				newPopulation.add(child);
 			}
 
 			this.population = newPopulation;
-			int count = 0;
 			for (Tree t : this.population) {
-				count++;
 				t.train(this.trainingData);
 				//System.out.println(t.getFitness() + " " + this.best.getFitness());
 				if (t.getFitness() > this.best.getFitness()) {
@@ -81,14 +85,22 @@ public class GP {
 					this.best.setFitness(t.getFitness());
 				}
 			}
-			System.out.println("best: " + this.best.getFitness());
+			Results.add(this.best.getFitness());
+			
 		}
 		this.best.test(testData);
 		this.best.test2(trainingData);
-		System.out.println("Test: "+this.best.getAccuracy()+"%");
+		/*System.out.println("Test: "+this.best.getAccuracy()+"%");
 		System.out.println("Training: "+this.best.getAccuracy2()+"%");
-		System.out.println("Best Tree: ");
-		//this.best.printTree();
+		System.out.println("c0: "+this.best.getAccuracyC0()+"%");
+		System.out.println("c1: "+this.best.getAccuracyC1()+"%");
+		System.out.println("here: " + this.best.printTreeText());*/
+		try {
+			outputBest();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private Tree mutation(Tree parent1) {
@@ -211,6 +223,33 @@ public class GP {
 			Tree individual = new Tree();
 			population.add(individual);
 		}
+	}
+	
+	public void outputBest() throws IOException
+	{
+		PrintWriter pw = new PrintWriter(new FileWriter("N-EFS-Bests.csv",true));
+	    StringBuilder sb = new StringBuilder();
+	    sb.append('\n');
+	    sb.append(this.start.getFitness());
+	    sb.append(',');
+	    sb.append(this.best.getFitness());
+	    sb.append(',');
+	    sb.append(this.best.getAccuracyC0());
+	    sb.append(',');
+	    sb.append(this.best.getAccuracyC1());
+	    sb.append(',');
+	    sb.append(this.best.getAccuracy());
+	    sb.append(',');
+	    sb.append(this.best.printTreeText());
+	    //sb.append('\n');
+
+	    pw.write(sb.toString());
+	    pw.close();
+	}
+	
+	public ArrayList<Double> outputArray()
+	{
+		return this.Results;
 	}
 
 	public ArrayList<Problem> readData(String filePath) throws IOException {

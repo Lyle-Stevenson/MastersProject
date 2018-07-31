@@ -11,7 +11,7 @@ import GeneticProgramming.Parameters;
 
 public class Tree {
 
-	private static final String[] FUNCTIONS = {"+","-","/","*"}; // List of
+	private static final String[] FUNCTIONS = {"+","-","/","*","SIN","COS","TAN","LOG","EXP"}; // List of
 																		// possible
 																		// function
 																		// nodes
@@ -20,10 +20,12 @@ public class Tree {
 												"f21","f22","f23","f24","f25","f26","f27","f28","f29","f30",
 												"f31","f32","f33","f34","f35","f36","f37","f38","f39","f40",
 												"f41","f42","f43","f44","f45","f46","f47","f48","f49","f50",
-												"f51","f52","f53","f54","f55","f56","f57","f58"}; // Possible terminal node values*/
+												"f51","f52","f53","f54","f55","f56","f57","f58"};
 	private double fitness = 0;
 	private double accuracy = 0;
 	private double accuracy2 = 0;
+	private double accuracyC1 = 0;
+	private double accuracyC0 = 0;
 	private static Random random = new Random();
 	private static Parameters params = new Parameters();
 	
@@ -138,6 +140,7 @@ public class Tree {
 		int correct = 0;
 		int incorrect = 0;
 		
+		
 		for(Problem p:training){
 			int classification;
 			this.subInFeats(p.getFeatures());
@@ -152,14 +155,14 @@ public class Tree {
 				classification = 0;
 			}else{
 				classification = 1;
-			}
+			}	
 			
 			if(classification == p.getClassification()){
 				correct++;
 			}else{
 				incorrect++;
 			}
-			System.out.println("predicted " + classification + "  actual " + p.getClassification());
+			//System.out.println("predicted " + classification + "  actual " + p.getClassification());
 		}
 		double total = correct+incorrect;
 		double accuracy = (correct / total) * 100;
@@ -170,6 +173,10 @@ public class Tree {
 
 		int correct = 0;
 		int incorrect = 0;
+		int c1Total = 0;
+		int c0Total = 0;
+		int c1Correct = 0;
+		int c0Correct = 0;
 		
 		for(Problem p:testing){
 			int classification;
@@ -187,16 +194,35 @@ public class Tree {
 				classification = 1;
 			}
 			
-			if(classification == p.getClassification()){
-				correct++;
+			if(p.getClassification() == 0){
+				c0Total ++;
 			}else{
+				c1Total ++;
+			}
+			
+			if(classification == 0 && p.getClassification() == 0){
+				correct++;
+				c0Correct ++;
+			}else if(classification == 1 && p.getClassification() == 1){ 
+				correct++;
+				c1Correct ++;
+			}
+			else{
 				incorrect++;
 			}
-			System.out.println("predicted " + classification + "  actual " + p.getClassification());
+			
+			//System.out.println("predicted " + classification + "  actual " + p.getClassification());
 		}
+		System.out.println(c1Total + " "+ c1Correct + " "+ c0Total+ " " + c0Correct);
 		double total = correct+incorrect;
 		double accuracy = (correct / total) * 100;
+		double c1Acc = c1Correct;
+		c1Acc = c1Acc / c1Total *100;
+		double c0Acc = c0Correct;
+		c0Acc = c0Acc / c0Total * 100;
 		setAccuracy(accuracy);
+		setAccuracyC1(c1Acc);
+		setAccuracyC0(c0Acc);
 	}
 	
 	public double getClass(double x, double mean, double SD){
@@ -265,6 +291,28 @@ public class Tree {
 				q.add(n.right);// enque the right child
 			}
 		}
+	}
+	
+	public String printTreeText() {
+		Queue<Node> q = new LinkedList<Node>();
+		q.add(this.getHead());
+		String tree = "";
+		while (!q.isEmpty()) {
+			Node n = q.poll();
+			if(n instanceof FunctionNode){
+			tree = tree.concat(n.getFunctionValue());
+			tree = tree.concat(",");}
+			else{
+			tree = tree.concat(n.getFunctionValue());
+			tree = tree.concat(",");}
+			if (n.left != null) {
+				q.add(n.left);// enqueue the left child
+			}
+			if (n.right != null) {
+				q.add(n.right);// enque the right child
+			}
+		}
+		return tree;
 	}
 	
 	public void subInFeats(ArrayList<Double> features) {
@@ -485,6 +533,21 @@ public class Tree {
 	case "-":
 		sum = left - right;
 		return sum;
+	case "SIN":
+		sum = left * Math.sin(right);
+		return sum;
+	case "COS":
+		sum = left * Math.cos(right);
+		return sum;
+	case "TAN":
+		sum = left * Math.tan(right);
+		return sum;
+	case "LOG":
+		sum = left * Math.log(right);
+		return sum;
+	case "EXP":
+		sum = left * Math.exp(right);
+		return sum;
 	case "/":
 		if(right == 0){
 			right = 1;
@@ -566,6 +629,22 @@ public class Tree {
 
 	public void setAccuracy2(double accuracy2) {
 		this.accuracy2 = accuracy2;
+	}
+
+	public double getAccuracyC1() {
+		return accuracyC1;
+	}
+
+	public void setAccuracyC1(double accuracyC1) {
+		this.accuracyC1 = accuracyC1;
+	}
+
+	public double getAccuracyC0() {
+		return accuracyC0;
+	}
+
+	public void setAccuracyC0(double accuracyC0) {
+		this.accuracyC0 = accuracyC0;
 	}
 	
 }
