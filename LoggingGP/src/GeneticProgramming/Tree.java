@@ -11,16 +11,16 @@ import GeneticProgramming.Parameters;
 
 public class Tree {
 
-	private static final String[] FUNCTIONS = {"+","-","/","*","SIN","COS","TAN","LOG","EXP"}; // List of
+	private static final String[] FUNCTIONS = {"+","-","/","*"}; // List of
 																		// possible
 																		// function
 																		// nodes
-	private static final String[] TERMINALS = { "f1","f2","f3","f4","f5","f6","f7","f8","f9","f10",
+	private static final String[] TERMINALS = { "f1","f2","f3","f4","f5","f6","f7","f8"};/*"f9","f10",
 												"f11","f12","f13","f14","f15","f16","f17","f18","f19","f20",
 												"f21","f22","f23","f24","f25","f26","f27","f28","f29","f30",
 												"f31","f32","f33","f34","f35","f36","f37","f38","f39","f40",
 												"f41","f42","f43","f44","f45","f46","f47","f48","f49","f50",
-												"f51","f52","f53","f54","f55","f56","f57","f58"};
+												"f51","f52","f53","f54","f55","f56","f57","f58"};*/
 	private double fitness = 0;
 	private double accuracy = 0;
 	private double accuracy2 = 0;
@@ -145,17 +145,20 @@ public class Tree {
 			int classification;
 			this.subInFeats(p.getFeatures());
 			double evaluation = evaluate(this.getHead());
-			double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
-			double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
+			//double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
+			//double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
 			//System.out.println("Eval : " + evaluation);
 			//System.out.println("C0: " + "Prob: " + c0Prob + " Mean: "  + this.c0Mean);
 			//System.out.println("C1: " + "Prob: " + c1Prob + " Mean: "  + this.c1Mean);
 			
-			if(c0Prob > c1Prob){
+			double c0Distance = Math.abs(this.c0Mean - evaluation);
+			double c1Distance = Math.abs(this.c1Mean - evaluation);
+			
+			if(c0Distance < c1Distance){
 				classification = 0;
 			}else{
 				classification = 1;
-			}	
+			}
 			
 			if(classification == p.getClassification()){
 				correct++;
@@ -187,7 +190,15 @@ public class Tree {
 			//System.out.println("Eval : " + evaluation);
 			//System.out.println("C0: " + "Prob: " + c0Prob + " Mean: "  + this.c0Mean);
 			//System.out.println("C1: " + "Prob: " + c1Prob + " Mean: "  + this.c1Mean);
+			//double c0Distance = Math.abs(evaluation - this.c0Mean);
+			//double c1Distance = Math.abs(evaluation - this.c1Mean);
 			
+			/*if(c0Distance < c1Distance){
+				classification = 0;
+			}else{
+				classification = 1;
+			}*/
+		
 			if(c0Prob > c1Prob){
 				classification = 0;
 			}else{
@@ -213,7 +224,6 @@ public class Tree {
 			
 			//System.out.println("predicted " + classification + "  actual " + p.getClassification());
 		}
-		System.out.println(c1Total + " "+ c1Correct + " "+ c0Total+ " " + c0Correct);
 		double total = correct+incorrect;
 		double accuracy = (correct / total) * 100;
 		double c1Acc = c1Correct;
