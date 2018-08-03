@@ -8,6 +8,6 @@ public class Parameters {
 	public final static int tnmtSize = 5;//1000
 	public static double crossoverProbability = 0.8;
 	public static int numberOfGenerations = 1000;//50
-	public static String testingData = "testingN.csv";
-	public static String trainingData = "trainingN.csv";
+	public static String testingData = "testingN-Balanced-Normalsied.csv";
+	public static String trainingData = "trainingN-Balanced-Normalised.csv";
 }

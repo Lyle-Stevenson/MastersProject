@@ -47,6 +47,7 @@ public class GP {
 		// child.printTree();
 
 		populate();
+		System.out.println(Parameters.maxDepth + " " + Parameters.maximumRecombinationDepth);
 		for (Tree t : this.population) {
 			t.train(this.trainingData);
 			if (t.getFitness() > this.best.getFitness()) {
@@ -89,7 +90,8 @@ public class GP {
 			
 		}
 		this.best.test(testData);
-		this.best.test2(trainingData);
+		System.out.println(this.best.getHead().getMaxDepth());
+		//this.best.test2(trainingData);
 		/*System.out.println("Test: "+this.best.getAccuracy()+"%");
 		System.out.println("Training: "+this.best.getAccuracy2()+"%");
 		System.out.println("c0: "+this.best.getAccuracyC0()+"%");
@@ -227,20 +229,24 @@ public class GP {
 	
 	public void outputBest() throws IOException
 	{
-		PrintWriter pw = new PrintWriter(new FileWriter("N-EFS-Bests.csv",true));
+		PrintWriter pw = new PrintWriter(new FileWriter("NezerBalanced-58feats-Bests.csv",true));
 	    StringBuilder sb = new StringBuilder();
 	    sb.append('\n');
-	    sb.append(this.start.getFitness());
-	    sb.append(',');
 	    sb.append(this.best.getFitness());
+	    sb.append(',');
+	    sb.append(this.best.getC0Mean());
+	    sb.append(',');
+	    sb.append(this.best.getC1Mean());
+	    sb.append(',');
+	    sb.append(this.best.getC0SD());
+	    sb.append(',');
+	    sb.append(this.best.getC1SD());
 	    sb.append(',');
 	    sb.append(this.best.getAccuracyC0());
 	    sb.append(',');
 	    sb.append(this.best.getAccuracyC1());
 	    sb.append(',');
 	    sb.append(this.best.getAccuracy());
-	    sb.append(',');
-	    sb.append(this.best.printTreeText());
 	    //sb.append('\n');
 
 	    pw.write(sb.toString());
