@@ -4,15 +4,14 @@ import java.util.ArrayList;
 
 public class Problem {
 	
-	private ArrayList<Double> features = new ArrayList<Double>();
-	private int classification;
+	private ArrayList<Double> features = new ArrayList<Double>(); //Array to hold the features of the given problem
+	private int classification; //int to hold the classification of the problem
 	
 	public Problem(ArrayList<Double> features, int classif){
 		
 		this.setFeatures(features);
 		this.setClassification(classif);
 	}
-	
 	
 	public ArrayList<Double> getFeatures() {
 		return features;

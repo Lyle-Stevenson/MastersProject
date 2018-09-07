@@ -1,8 +1,5 @@
 package GeneticProgramming;
 
-import java.awt.List;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -27,7 +24,6 @@ public class Tree {
 	private double accuracyC1 = 0;
 	private double accuracyC0 = 0;
 	private static Random random = new Random();
-	private static Parameters params = new Parameters();
 	
 	private double c1Mean;
 	private double c1SD;
@@ -36,20 +32,21 @@ public class Tree {
 
 	private Node head = null; // Reference to head of the tree
 
-	// public static Tree full(int depth) {
-	// if (depth > 1) {
-	// String operator = OPERATORS[random.nextInt(OPERATORS.length)];
-	// return new Tree(operator, full(depth - 1), full(depth - 1));
-	// } else {
-	// return new Tree(random.nextInt(MAX_OPERAND) + 1);
-	// }
-	// }
-
+	//Defaults constructor is to create a tree using grow method
 	public Tree() { // Constructor
 		this.setHead(generateHead()); // Trees head is created on initialisation
 		this.getHead().setParentNode(null); // Head node has no parent
 		this.getHead().setLevel(1); // Sets level to 0
-		this.setHead(grow(this.getHead(), params.maxDepth)); // Call to generate the
+		this.setHead(grow(this.getHead(), Parameters.maxDepth)); // Call to generate the
+														// rest of tree.
+	}
+	
+	//This constructor creates a tree using full method
+	public Tree(String full) { // Constructor
+		this.setHead(generateHead()); // Trees head is created on initialisation
+		this.getHead().setParentNode(null); // Head node has no parent
+		this.getHead().setLevel(1); // Sets level to 0
+		this.setHead(full(this.getHead(), Parameters.maxDepth)); // Call to generate the
 														// rest of tree.
 	}
 	
@@ -74,7 +71,7 @@ public class Tree {
 												// node.
 		int level = parent.getLevel() + 1; // Level tracker to assign to newly
 											// created children.
-		for (int i = 0; i < 2; i++) { // Grow method is ran through twice as each node can have a left and right child
+		for (int i = 0; i < 2; i++) { //  method is ran through twice as each node can have a left and right child
 			Node child = null; // Initialise the child
 			if (level < depth && random.nextBoolean()) { //50% chance the new child is a terminal or fucntion node.
 				String function = FUNCTIONS[random.nextInt(FUNCTIONS.length)]; //Random function is selected
@@ -105,12 +102,53 @@ public class Tree {
 		}
 		return parent; //Returns head node once tree is complete.
 	}
+	
+	
+	public Node full(Node parent, int depth) { // Grows the tree from given
+		// node.
+		int level = parent.getLevel() + 1; // Level tracker to assign to newly
+		// created children.
+		for (int i = 0; i < 2; i++) { 
+			Node child = null; // Initialise the child
+			if (level < depth) { 
+				String function = FUNCTIONS[random.nextInt(FUNCTIONS.length)]; 
+				child = new FunctionNode(function); // Child node is set
+				child.setLevel(parent.getLevel() + 1); // Childs level is set
+				child.setParentNode(parent); // Parent is set.
+				if (i == 0) { // If first iteration then its left child
+					parent.setLeft(child);
+					parent.getChildNodes().add(child);
+				} else { // If second iteration then its right child
+					parent.setRight(child);
+					parent.getChildNodes().add(child);
+				}
+				child = grow(child, depth); // Grow tree from this child
+			} else { // If child is selected to be a terminal node
+				String terminal = TERMINALS[random.nextInt(TERMINALS.length)]; 
+				child = new TerminalNode(terminal); // Terminal value added to
+													// node
+				child.setLevel(parent.getLevel() + 1); // Childs level is set
+				child.setParentNode(parent);// Childs parent is set
+				if (i == 0) { // If first iteration then its left child
+					parent.setLeft(child);
+					parent.getChildNodes().add(child);
+				} else { // If second iteration then its right child
+					parent.setRight(child);
+					parent.getChildNodes().add(child);
+				}
+			}
+		}
+		return parent; // Returns head node once tree is complete.
+	}
 
+	//Trains the tree on the training set.
 	public void train(ArrayList<Problem> training){
 		
+		//Array for class evaluations.
 		ArrayList<Double> c1 = new ArrayList<Double>();
 		ArrayList<Double> c0 = new ArrayList<Double>();
 		
+		//Evaluates each problem on a tree and adds its value to whichever class it belongs too.
 		for(Problem p:training){
 			this.subInFeats(p.getFeatures());
 			double evaluation;	
@@ -123,55 +161,25 @@ public class Tree {
 			}else{
 				c1.add(evaluation);
 			}
+			
 		}
-		this.setC1Mean(this.getMean(c1));
-		this.setC0Mean(this.getMean(c0));
+		this.c0Mean = 0;
+		this.c1Mean = 0;
+		this.c0SD = 0;
+		this.c1SD = 0;
 		
-		this.setC1SD(this.getStdDev(this.getC1Mean(),c1));
-		this.setC0SD(this.getStdDev(this.getC0Mean(),c0));		
+		//Calculates the means and SD for the evaluations values found for each class.
+		this.setC1Mean(calculateMean(c1));
+		this.setC0Mean(calculateMean(c0));
 		
+		this.setC1SD(calculateStdDev(c1));
+		this.setC0SD(calculateStdDev(c0));		
+		
+		//Calculates the fitness of the tree
 		this.setFitness(this.calcFitness());
-		
-		
 	}
 	
-	public void test2(ArrayList<Problem> training){
-
-		int correct = 0;
-		int incorrect = 0;
-		
-		
-		for(Problem p:training){
-			int classification;
-			this.subInFeats(p.getFeatures());
-			double evaluation = evaluate(this.getHead());
-			//double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
-			//double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
-			//System.out.println("Eval : " + evaluation);
-			//System.out.println("C0: " + "Prob: " + c0Prob + " Mean: "  + this.c0Mean);
-			//System.out.println("C1: " + "Prob: " + c1Prob + " Mean: "  + this.c1Mean);
-			
-			double c0Distance = Math.abs(this.c0Mean - evaluation);
-			double c1Distance = Math.abs(this.c1Mean - evaluation);
-			
-			if(c0Distance < c1Distance){
-				classification = 0;
-			}else{
-				classification = 1;
-			}
-			
-			if(classification == p.getClassification()){
-				correct++;
-			}else{
-				incorrect++;
-			}
-			//System.out.println("predicted " + classification + "  actual " + p.getClassification());
-		}
-		double total = correct+incorrect;
-		double accuracy = (correct / total) * 100;
-		setAccuracy2(accuracy);
-	}
-	
+	//Tests the tree against the test set.
 	public void test(ArrayList<Problem> testing){
 
 		int correct = 0;
@@ -185,32 +193,25 @@ public class Tree {
 			int classification;
 			this.subInFeats(p.getFeatures());
 			double evaluation = evaluate(this.getHead());
-			//double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
-			//double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
-			//System.out.println("Eval : " + evaluation);
-			//System.out.println("C0: " + "Prob: " + c0Prob + " Mean: "  + this.c0Mean);
-			//System.out.println("C1: " + "Prob: " + c1Prob + " Mean: "  + this.c1Mean);
-			double c0Distance = Math.abs(evaluation - this.c0Mean);
-			double c1Distance = Math.abs(evaluation - this.c1Mean);
-			
-			if(c0Distance < c1Distance){
+			//Returns the class probability for each class
+			double c0Prob = getClass(evaluation, this.c0Mean, this.getC0SD());
+			double c1Prob = getClass(evaluation, this.c1Mean, this.getC1SD());
+		
+			//Whichever class has the highest probability is assigned to that problem.
+			if(c0Prob > c1Prob){
 				classification = 0;
 			}else{
 				classification = 1;
 			}
-		
-			/*if(c0Prob > c1Prob){
-				classification = 0;
-			}else{
-				classification = 1;
-			}*/
 			
+			//Tacks the total number of predictions in each class.
 			if(p.getClassification() == 0){
 				c0Total ++;
 			}else{
 				c1Total ++;
 			}
 			
+			//Checks the predicted class against the actual class to see if it was correct.
 			if(classification == 0 && p.getClassification() == 0){
 				correct++;
 				c0Correct ++;
@@ -222,8 +223,9 @@ public class Tree {
 				incorrect++;
 			}
 			
-			//System.out.println("predicted " + classification + "  actual " + p.getClassification());
 		}
+		
+		//Calcualtes the overall accuracy and the accuracy on each individual class.
 		double total = correct+incorrect;
 		double accuracy = (correct / total) * 100;
 		double c1Acc = c1Correct;
@@ -235,6 +237,7 @@ public class Tree {
 		setAccuracyC0(c0Acc);
 	}
 	
+	//Predicts the class of a problem using the Guassian distribution method.
 	public double getClass(double x, double mean, double SD){
 		double value = 0;
 		double left = 1/(SD*(Math.sqrt(2 * Math.PI)));
@@ -247,15 +250,7 @@ public class Tree {
 		return value;
 	}
 	
-	public static double round(double value, int places) {
-	    if (places < 0) throw new IllegalArgumentException();
-
-	    long factor = (long) Math.pow(10, places);
-	    value = value * factor;
-	    long tmp = Math.round(value);
-	    return (double) tmp / factor;
-	}
-	
+	//Calculates fitness using the Fisher criterion
 	public double calcFitness(){
 		double fitness = 0;
 		
@@ -265,26 +260,27 @@ public class Tree {
 		
 		return fitness;
 	}
-	 double getMean(ArrayList<Double> data) {
-	        double sum = 0.0;
-	        for(double a : data)
-	            sum += a;
-	        return sum/data.size();
-	    }
-
-	    double getVariance(double mean, ArrayList<Double> data) {
-	        double temp = 0;
-	        for(double a :data)
-	            temp += (a-mean)*(a-mean);
-	        return temp/(data.size()-1);
-	    }
-
-	    double getStdDev(double mean , ArrayList<Double> data ) {
-	        return Math.sqrt(getVariance(mean,data));
-	    }
 	
+	double calculateMean(ArrayList<Double> test) {
+        double sum = 0.0;
+        for(double a : test)
+            sum += a;
+        return sum/test.size();
+    }
+
+    double calculateVariance(ArrayList<Double> test) {
+        double mean = calculateMean(test);
+        double temp = 0;
+        for(double a :test)
+            temp += (a-mean)*(a-mean);
+        return temp/(test.size()-1);
+    }
+    
+    double calculateStdDev(ArrayList<Double> test) {
+        return Math.sqrt(calculateVariance(test));
+    }
 	
-	    
+	//Prints the tree using the terminal numeric values an shows what level each terminal is at.
 	public void printTree() {
 		Queue<Node> q = new LinkedList<Node>();
 		q.add(this.getHead());
@@ -303,18 +299,15 @@ public class Tree {
 		}
 	}
 	
+	//Prints the tree in text form using the terminal lables not numeric values.
 	public String printTreeText() {
 		Queue<Node> q = new LinkedList<Node>();
 		q.add(this.getHead());
 		String tree = "";
 		while (!q.isEmpty()) {
 			Node n = q.poll();
-			if(n instanceof FunctionNode){
 			tree = tree.concat(n.getFunctionValue());
-			tree = tree.concat(",");}
-			else{
-			tree = tree.concat(n.getFunctionValue());
-			tree = tree.concat(",");}
+			tree = tree.concat(",");
 			if (n.left != null) {
 				q.add(n.left);// enqueue the left child
 			}
@@ -325,11 +318,13 @@ public class Tree {
 		return tree;
 	}
 	
+	//Each terminal is listed as a label i.e "f1" "f32" these labels are substituted for their real values in this method. 
 	public void subInFeats(ArrayList<Double> features) {
-		Queue<Node> q = new LinkedList<Node>();
-		q.add(this.getHead());
-		while (!q.isEmpty()) {
+		Queue<Node> q = new LinkedList<Node>(); // A linked list to queue all of the nodes for substitution.
+		q.add(this.getHead());// Adds the head of tree as starting node.
+		while (!q.isEmpty()) { 
 			Node n = q.poll();
+			//Switch statement to find which terminal value should be subsititued in.
 			switch(n.getFunctionValue()){
 			case "f1":
 				n.setTerminalValue(features.get(0));
@@ -506,6 +501,7 @@ public class Tree {
 				n.setTerminalValue(features.get(57));
 				break;
 			}
+			//Adds child nodes to the queue.
 			if (n.left != null) {
 				q.add(n.left);// enqueue the left child
 			}
@@ -515,20 +511,21 @@ public class Tree {
 		}
 	}
 	
-	
+	//Returns the evaluation of the tree using recursion.
 	public double evaluate(Node node){
 		if(node !=null){
-			if(node instanceof TerminalNode){
+			if(node instanceof TerminalNode){ //If a node is a terminal it returns its value.
 				return node.getTerminalValue();
 			}else{
-				double left = evaluate(node.left);
-				double right = evaluate(node.right);
-				return calculate(left,node.getFunctionValue(), right);
+				double left = evaluate(node.left); //Returns the evaluation of the left node. If its a function the evaluation method is called again.
+				double right = evaluate(node.right); //Returns the evaluation of the right node. If its a function the evaluation method is called again.
+				return calculate(left,node.getFunctionValue(), right); // Calculates the value a function node will give.
 			}
 		}
 	return -1;
 	}
 
+	//Provides the calculation of a function node and its children
 	private double calculate(double left, String functionValue, double right) {
 		
 	double sum = 0;
@@ -559,7 +556,7 @@ public class Tree {
 		sum = left * Math.exp(right);
 		return sum;
 	case "/":
-		if(right == 0){
+		if(right == 0){ //Protects from division by 0
 			right = 1;
 		}
 		sum = left / right;
@@ -569,6 +566,7 @@ public class Tree {
 	return -1;
 }
 
+	//Getters and setters.
 	public Node getHead() {
 		return head;
 	}
@@ -615,14 +613,6 @@ public class Tree {
 
 	public void setFitness(double fitness) {
 		this.fitness = fitness;
-	}
-	
-	public Tree copy(Node head) {
-		Tree copy = new Tree(head);
-		
-		return copy;
-		
-		
 	}
 
 	public double getAccuracy() {

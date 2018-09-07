@@ -21,118 +21,95 @@ public class GP {
 
 	public GP() {
 		try {
-			getData();
+			getData(); // Reads in the train and test set from file.
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		// Crossover test
-		// Tree a1 = new Tree();
-		// a1.train(trainingData);
-		// Tree a2 = new Tree(a1.getHead().copy(null));
-		// Tree b1 = new Tree();
-		// b1.train(trainingData);
-		// Tree b2 = new Tree(b1.getHead().copy(null));
-		//
-		// System.out.println(" ");
-		// System.out.println("Parent1: ");
-		// a2.printTree();
-		// System.out.println(" ");
-		// System.out.println("Parent2: ");
-		// b2.printTree();
-		// System.out.println(" ");
-		// System.out.println("Child: ");
-		// Tree child = crossover(a2,b2);
-		// child.printTree();
-
-		populate();
-		System.out.println(Parameters.maxDepth + " " + Parameters.maximumRecombinationDepth);
+		populate();// Populates the initial populations using ramped half and half.
 		for (Tree t : this.population) {
-			t.train(this.trainingData);
-			if (t.getFitness() > this.best.getFitness()) {
+			t.train(this.trainingData); //Trains each tree on the training set.
+			if (t.getFitness() > this.best.getFitness()) { // Keeps tack of the best tree in the population.
 				this.best = new Tree(t.getHead().copy(null));
 				this.best.setFitness(t.getFitness());
 				this.start = new Tree(t.getHead().copy(null));
 				this.start.setFitness(t.getFitness());
 			}
 		}
+		//Evoluation in each generation
 		for (int gen = 0; gen < Parameters.numberOfGenerations; gen++) {
-			ArrayList<Tree> newPopulation = new ArrayList<Tree>();
-			newPopulation.add(this.best);
+			ArrayList<Tree> newPopulation = new ArrayList<Tree>(); //Creates an array of the new populations being created.
+			newPopulation.add(this.best);// Elitism to add the best from previous pop to new pop
 			for (int i = 0; i < Parameters.popSize-1; i++) {
 				Tree child;
-				if (random.nextDouble() < Parameters.crossoverProbability) {
+				if (random.nextDouble() < Parameters.crossoverProbability) { // Checks whether crossover or mutation operator will be used.
+					//Tournament to select two parents and create copies of them for use.
 					Tree parent1 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
 					Tree parent2 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
-
-					while (parent1 == parent2) {
+					while (parent1 == parent2) { // If same parent is selected twice the select a new parent.
 						parent2 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
 					}
-					child = crossover(parent1, parent2);
-				}	else {
+					child = crossover(parent1, parent2); //Cross over two parents to create one child.
+				}	else { //If mutation is selected select one parent to mutate.
 					Tree parent1 = new Tree(selection(Parameters.tnmtSize).getHead().copy(null));
 				child = mutation(parent1);
 			}
-				newPopulation.add(child);
-			}
+				child.train(trainingData); //Train the resulting child on the trainin set
+				newPopulation.add(child); //Adds child to new population.
+		}
 
-			this.population = newPopulation;
-			for (Tree t : this.population) {
-				t.train(this.trainingData);
-				//System.out.println(t.getFitness() + " " + this.best.getFitness());
+			this.population = newPopulation;//Overwrites old population with new one
+			for (Tree t : this.population) { //Checks for the best child in the population.
 				if (t.getFitness() > this.best.getFitness()) {
 					this.best = new Tree(t.getHead().copy(null));
 					this.best.setFitness(t.getFitness());
+					this.best.setC0Mean(t.getC0Mean());
+					this.best.setC1Mean(t.getC1Mean());
+					this.best.setC0SD(t.getC0SD());
+					this.best.setC1SD(t.getC1SD());
 				}
 			}
-			Results.add(this.best.getFitness());
-			
+			Results.add(this.best.getFitness()); //Adds the best from current generation to a results arry for output.
 		}
-		this.best.test(testData);
-		System.out.println(this.best.getHead().getMaxDepth());
-		//this.best.test2(trainingData);
-		/*System.out.println("Test: "+this.best.getAccuracy()+"%");
-		System.out.println("Training: "+this.best.getAccuracy2()+"%");
-		System.out.println("c0: "+this.best.getAccuracyC0()+"%");
-		System.out.println("c1: "+this.best.getAccuracyC1()+"%");
-		System.out.println("here: " + this.best.printTreeText());*/
+		this.best.test(testData); // Tests the best tree found on testing data.
 		try {
-			outputBest();
+			outputBest();//Outputs details of best tree found
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	//Mutation
 	private Tree mutation(Tree parent1) {
 		Tree child;
-
 		Node point1;
-
-		if (parent1.getHead() instanceof TerminalNode) {
+		
+		if (parent1.getHead() instanceof TerminalNode) {//If the tree is a single terminl node then it is selected as the mutation point
 			point1 = parent1.getHead();
-		} else {
+		} else {//Otherwise a random point in the tree is selected from all the nodes in the tree.
 			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
 		
+		//If the selected muation node is at the level of the max recombination set then a new point is found.
 		while(point1.getLevel() >= Parameters.maximumRecombinationDepth){
 			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
 
 		child = parent1;
+		Tree mutationTree = new Tree(Parameters.maximumRecombinationDepth - (point1.getLevel())); //Mutation tree is formed from the point
 
-		Tree mutationTree = new Tree(Parameters.maximumRecombinationDepth - (point1.getLevel()));
-
+		//If the point chose was the head node of the tree then new tree is the mutation tree.
 		if (point1.getParentNode() == null) {
 			child = mutationTree;
-		} else if (point1.getParentNode().getLeft() == point1) {
+		} else if (point1.getParentNode().getLeft() == point1) { //If the point selected is the left node of its parent then replace left node with mutation tree. 
 			point1.getParentNode().setLeft(mutationTree.getHead());
 			point1.getParentNode().getChildNodes().remove(point1);
 			point1.getParentNode().getChildNodes().add(mutationTree.getHead());
 			mutationTree.getHead().setParentNode(point1.getParentNode());
 			mutationTree.getHead().resetLevels(mutationTree.getHead());
-		} else {
+		} else {//If the point selected is the right node of its parent then replace left node with mutation tree. 
 			point1.getParentNode().setRight(mutationTree.getHead());
 			point1.getParentNode().getChildNodes().remove(point1);
 			point1.getParentNode().getChildNodes().add(mutationTree.getHead());
@@ -147,12 +124,13 @@ public class GP {
 		Node point1;
 		Node point2;
 
-		if (parent1.getHead() instanceof TerminalNode) {
+		if (parent1.getHead() instanceof TerminalNode) {//If the tree is a single terminal node then it is selected as the crossover point point
 			point1 = parent1.getHead();
-		} else {
+		} else {//Otherwise a random point in the tree is selected from all the nodes in the tree.
 			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
 
+		//If the selected crossover node node is at the level of the max recombination set then a new point is found.
 		while(point1.getLevel() >= Parameters.maximumRecombinationDepth){
 			point1 = parent1.getHead().getAllNodes().get(random.nextInt(parent1.getHead().getAllNodes().size()));
 		}
@@ -193,43 +171,57 @@ public class GP {
 		return child;
 	}
 
+	//Torunament selection
 	public Tree selection(int tnSize) {
-		ArrayList<Tree> tournament = new ArrayList<Tree>();
+		ArrayList<Tree> tournament = new ArrayList<Tree>(); //Array list to hold trees in the tournament.
 		Tree chosenParent = null;
 		Random generator = new Random();
 		double bestFitness = 0;
 
+		//Selects the tournmant size amount of individuals from the population.
 		for (int i = 0; i < tnSize; i++) {
 			tournament.add(this.population.get(generator.nextInt(this.population.size() - 1)));
 		}
 
-		chosenParent = tournament.get(0);
-
+		chosenParent = tournament.get(0); //First in the tournament is automatically selected as parent.
+		bestFitness = chosenParent.getFitness();
+		
+		//Rest of tournament individuals are compared to see who is fitter.
 		for (Tree t : tournament) {
 			if (t.getFitness() > bestFitness) {
 				bestFitness = t.getFitness();
 				chosenParent = t;
 			}
 		}
-		return chosenParent;
+		return chosenParent; 
 	}
 
+	//Fetches the training and testing dta from the files.
 	private void getData() throws IOException {
 		testData = readData(Parameters.testingData);
 		trainingData = readData(Parameters.trainingData);
 	}
 
+	//Populates using ramped half and half
 	public void populate() {
 
-		for (int i = 0; i < Parameters.popSize; i++) {
+		//First half are generated using grow method
+		for (int i = 0; i < Parameters.popSize/2; i++) {
 			Tree individual = new Tree();
+			population.add(individual);
+		}
+		
+		//Second half are generated using full method
+		for (int i = Parameters.popSize/2; i < Parameters.popSize; i++) {
+			Tree individual = new Tree("Full");
 			population.add(individual);
 		}
 	}
 	
+	// Outputs the best individuals data to a file.
 	public void outputBest() throws IOException
 	{
-		PrintWriter pw = new PrintWriter(new FileWriter("NezerBalanced-58feats-Bests.csv",true));
+		PrintWriter pw = new PrintWriter(new FileWriter("Bests.csv",true));
 	    StringBuilder sb = new StringBuilder();
 	    sb.append('\n');
 	    sb.append(this.best.getFitness());
@@ -247,11 +239,10 @@ public class GP {
 	    sb.append(this.best.getAccuracyC1());
 	    sb.append(',');
 	    sb.append(this.best.getAccuracy());
-	    //sb.append('\n');
 
 	    pw.write(sb.toString());
 	    pw.close();
-	}
+	}	
 	
 	public ArrayList<Double> outputArray()
 	{
